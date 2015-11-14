@@ -1,16 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/daneroo/snookr4go/fswalker"
 	"github.com/rwcarlsen/goexif/exif"
 	"github.com/rwcarlsen/goexif/mknote"
 	"github.com/rwcarlsen/goexif/tiff"
 	"log"
 	"os"
-	"path"
-	"path/filepath"
-	"strings"
+	"sort"
 )
 
 // see https://lawlessguy.wordpress.com/2013/07/23/filling-a-slice-using-command-line-flags-in-go-golang/ to use multiple arguments.
@@ -34,30 +34,36 @@ func main() {
 			fmt.Printf("Root folder not found: %s\n", root)
 			continue
 		}
-		err := filepath.Walk(root, visit)
+
+		err := fswalker.WalkImages(root, visit)
 		if err != nil {
-			fmt.Printf("Walk(%s) returned %v\n", root, err)
+			fmt.Printf("WalkImages(%s) returned %v\n", root, err)
 		} else {
-			fmt.Printf("Walk(%s) is done\n", root)
-
+			fmt.Printf("WalkImages(%s) is done\n", root)
 		}
+
+		paths := []string{"coco"}
+		sort.Strings(paths)
+		// m, err := fswalker.MD5All(os.Args[1])
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	return
+		// }
+		// var paths []string
+		// for path := range m {
+		// 	paths = append(paths, path)
+		// }
+		// sort.Strings(paths)
+		// for _, path := range paths {
+		// 	fmt.Printf("%x  %s\n", m[path], path)
+		// }
+
 	}
 
 }
 
-func visit(filename string, f os.FileInfo, err error) error {
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-	}
-	// fmt.Printf("f: %v\n", f)
-	// fmt.Printf("Visited: %s\n", filename)
-	if !f.IsDir() && strings.ToLower(path.Ext(filename)) == ".jpg" {
-		exifOne(filename)
-	}
-	return nil
-}
-
-func exifOne(name string) error {
+func visit(ima fswalker.ImageInfo) error {
+	name := ima.FileName
 	f, err := os.Open(name)
 	if err != nil {
 		log.Printf("err on %v: %v", name, err)
@@ -70,10 +76,14 @@ func exifOne(name string) error {
 		return err
 	}
 
-	fmt.Printf("  ---- Image '%v' ----\n", name)
+	asJson, err := json.Marshal(ima)
+	fmt.Printf("  ---- Image '%s' ----\n", asJson)
 	stamp, err := x.DateTime() // normally, don't ignore errors!
 	if err != nil {
 		fmt.Printf("  Date: %v\n", stamp)
+	} else {
+		fmt.Printf("  Date error: %v\n", err)
+
 	}
 	camModel, err := x.Get(exif.Model) // normally, don't ignore errors!
 	if err == nil && camModel != nil {
@@ -83,7 +93,6 @@ func exifOne(name string) error {
 	if err == nil && ownName != nil {
 		fmt.Printf("  Owner Name: %v\n", ownName)
 	}
-
 	// x.Walk(Walker{})
 	return nil
 }
