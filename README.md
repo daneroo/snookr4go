@@ -13,7 +13,6 @@ and also [the example in exifstat folder of rwcarlsen's exif lib](https://github
 -Talk to Flickr: getPhotoList, uploadPhoto. (oauth can be reused from snookr4gv2/auth-node)
 -Define interfaces for...
 
-
 ## Code Organization
 
 - `snookrstat`: Command line utility
@@ -23,3 +22,22 @@ and also [the example in exifstat folder of rwcarlsen's exif lib](https://github
 - FileWalking
 - Exif manipulation
 - Flickr stuff
+
+## References
+### JSON
+
+- [Golang Blog: JSON](http://blog.golang.org/json-and-go)
+
+### Concurrency
+
+- [Golang Blog: Pipelines](https://blog.golang.org/pipelines)
+- [Effective Go](http://golang.org/doc/effective_go.html#concurrency)
+
+### Flickr packages
+
+- [masci](https://github.com/masci/flickr) : seems the way to go!
+- [Camlistore](https://camlistore.org/pkg/importer/flickr/flickr.go) : just an importer
+- [manki](https://github.com/manki/flickgo) : imcomplete
+- [mncaudill](https://github.com/mncaudill/go-flickr) : verryyy old
+
+
