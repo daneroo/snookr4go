@@ -13,30 +13,36 @@ import (
 	"strings"
 )
 
+// see https://lawlessguy.wordpress.com/2013/07/23/filling-a-slice-using-command-line-flags-in-go-golang/ to use multiple arguments.
+// or use this alternative package
+// var root = flag.Bool("root", '', "a root to traverse")
+
 func main() {
 	flag.Parse()
-	// fnames := []string{"dad.jpg", "dan.jpg"}
+	roots := flag.Args()
 
 	exif.RegisterParsers(mknote.All...)
 
-	root := flag.Arg(0)
-	if root == "" {
-		fmt.Printf("Root folder not specified.")
-		os.Exit(1)
-	}
-	if _, err := os.Stat(root); os.IsNotExist(err) {
-		fmt.Printf("Root folder not found: %s", root)
+	// root := flag.Arg(0)
+	if len(roots) == 0 {
+		fmt.Printf("Root folder(s) not specified.")
 		os.Exit(1)
 	}
 
-	err := filepath.Walk(root, visit)
-	fmt.Printf("filepath.Walk() returned %v\n", err)
+	for _, root := range roots {
+		if _, err := os.Stat(root); os.IsNotExist(err) {
+			fmt.Printf("Root folder not found: %s\n", root)
+			continue
+		}
+		err := filepath.Walk(root, visit)
+		if err != nil {
+			fmt.Printf("Walk(%s) returned %v\n", root, err)
+		} else {
+			fmt.Printf("Walk(%s) is done\n", root)
 
-	// os.Exit(1)
+		}
+	}
 
-	// for _, name := range fnames {
-	// 	exifOne(name)
-	// }
 }
 
 func visit(filename string, f os.FileInfo, err error) error {
@@ -64,18 +70,18 @@ func exifOne(name string) error {
 		return err
 	}
 
-	fmt.Printf("---- Image '%v' ----\n", name)
+	fmt.Printf("  ---- Image '%v' ----\n", name)
 	stamp, err := x.DateTime() // normally, don't ignore errors!
 	if err != nil {
-		fmt.Printf("Date: %v\n", stamp)
+		fmt.Printf("  Date: %v\n", stamp)
 	}
 	camModel, err := x.Get(exif.Model) // normally, don't ignore errors!
 	if err == nil && camModel != nil {
-		fmt.Printf("Camera Model: %v\n", camModel)
+		fmt.Printf("  Camera Model: %v\n", camModel)
 	}
 	ownName, _ := x.Get(mknote.OwnerName) // normally, don't ignore errors!
 	if err == nil && ownName != nil {
-		fmt.Printf("Owner Name: %v\n", ownName)
+		fmt.Printf("  Owner Name: %v\n", ownName)
 	}
 
 	// x.Walk(Walker{})

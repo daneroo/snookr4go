@@ -17,6 +17,9 @@ and also [the example in exifstat folder of rwcarlsen's exif lib](https://github
 ## Code Organization
 
 - `snookrstat`: Command line utility
+    
+    go run snookrstat/snookr.go images/ notExist images/dad.jpg 
+
 - FileWalking
 - Exif manipulation
 - Flickr stuff
