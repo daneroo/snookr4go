@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -44,7 +45,7 @@ func visit(filename string, f os.FileInfo, err error) error {
 	}
 	// fmt.Printf("f: %v\n", f)
 	// fmt.Printf("Visited: %s\n", filename)
-	if !f.IsDir() && path.Ext(filename) == ".jpg" {
+	if !f.IsDir() && strings.ToLower(path.Ext(filename)) == ".jpg" {
 		exifOne(filename)
 	}
 	return nil
