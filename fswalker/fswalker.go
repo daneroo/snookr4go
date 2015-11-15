@@ -16,6 +16,9 @@ import (
 	"time"
 )
 
+// for Marshalling without TimeZone
+type ZonelessTime time.Time
+
 type ImageInfo struct {
 	FileName     string    `json:"filename"`
 	Size         int64     `json:"size"`
@@ -42,6 +45,7 @@ func WalkImages(root string, walkImageFn ImageWalkFunc) error {
 		ext := strings.ToLower(path.Ext(filename))
 		if !f.IsDir() && (ext == ".jpg" || ext == ".jpeg") {
 
+			// for MD5
 			data, err := ioutil.ReadFile(filename)
 			if err != nil {
 				return err
