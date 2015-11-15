@@ -10,7 +10,7 @@ import (
 	"github.com/rwcarlsen/goexif/tiff"
 	"log"
 	"os"
-	"sort"
+	"time"
 )
 
 // see https://lawlessguy.wordpress.com/2013/07/23/filling-a-slice-using-command-line-flags-in-go-golang/ to use multiple arguments.
@@ -38,25 +38,12 @@ func main() {
 		err := fswalker.WalkImages(root, visit)
 		if err != nil {
 			fmt.Printf("WalkImages(%s) returned %v\n", root, err)
-		} else {
-			fmt.Printf("WalkImages(%s) is done\n", root)
 		}
 
-		paths := []string{"coco"}
-		sort.Strings(paths)
-		// m, err := fswalker.MD5All(os.Args[1])
-		// if err != nil {
-		// 	fmt.Println(err)
-		// 	return
-		// }
-		// var paths []string
-		// for path := range m {
-		// 	paths = append(paths, path)
-		// }
-		// sort.Strings(paths)
-		// for _, path := range paths {
-		// 	fmt.Printf("%x  %s\n", m[path], path)
-		// }
+		// the bounded walker
+		if err := fswalker.MD5All(root); err != nil {
+			fmt.Printf("MD5 error:%v\n", err)
+		}
 
 	}
 
@@ -76,24 +63,28 @@ func visit(ima fswalker.ImageInfo) error {
 		return err
 	}
 
-	asJson, err := json.Marshal(ima)
-	fmt.Printf("  ---- Image '%s' ----\n", asJson)
-	stamp, err := x.DateTime() // normally, don't ignore errors!
-	if err != nil {
-		fmt.Printf("  Date: %v\n", stamp)
+	taken, err := x.DateTime() // normally, don't ignore errors!
+	if err == nil {
+		ima.Taken = taken
 	} else {
 		fmt.Printf("  Date error: %v\n", err)
+		ima.Taken = time.Unix(0, 0)
+	}
 
+	model, err := x.Get(exif.Model) // normally, don't ignore errors!
+	if err == nil && model != nil {
+		ima.Camera = fmt.Sprintf("%v", model)
 	}
-	camModel, err := x.Get(exif.Model) // normally, don't ignore errors!
-	if err == nil && camModel != nil {
-		fmt.Printf("  Camera Model: %v\n", camModel)
+
+	owner, err := x.Get(mknote.OwnerName) // normally, don't ignore errors!
+	if err == nil && owner != nil {
+		ima.Owner = fmt.Sprintf("%v", owner)
 	}
-	ownName, _ := x.Get(mknote.OwnerName) // normally, don't ignore errors!
-	if err == nil && ownName != nil {
-		fmt.Printf("  Owner Name: %v\n", ownName)
-	}
+
+	asJson, err := json.Marshal(ima)
+	fmt.Println(string(asJson))
 	// x.Walk(Walker{})
+
 	return nil
 }
 

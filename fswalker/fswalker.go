@@ -10,19 +10,20 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 )
 
 type ImageInfo struct {
-	FileName     string
-	Size         int64
-	Md5          string
-	LastModified time.Time
-	Taken        time.Time
-	Camera       string
-	Owner        string
+	FileName     string    `json:"filename"`
+	Size         int64     `json:"size"`
+	Md5          string    `json:"md5"`
+	LastModified time.Time `json:"lastModified"`
+	Taken        time.Time `json:"taken"`
+	Camera       string    `json:"camera"`
+	Owner        string    `json:"owner"`
 }
 
 type ImageWalkFunc func(ima ImageInfo) error
@@ -114,7 +115,7 @@ func digester(done <-chan struct{}, paths <-chan string, c chan<- result) {
 // from file path to the MD5 sum of the file's contents.  If the directory walk
 // fails or any read operation fails, MD5All returns an error.  In that case,
 // MD5All does not wait for inflight read operations to complete.
-func MD5All(root string) (map[string][md5.Size]byte, error) {
+func MD5All(root string) error {
 	// MD5All closes the done channel when it returns; it may do so before
 	// receiving all the values from c and errc.
 	done := make(chan struct{})
@@ -142,13 +143,26 @@ func MD5All(root string) (map[string][md5.Size]byte, error) {
 	m := make(map[string][md5.Size]byte)
 	for r := range c {
 		if r.err != nil {
-			return nil, r.err
+			return r.err
 		}
 		m[r.path] = r.sum
 	}
 	// Check whether the Walk failed.
 	if err := <-errc; err != nil { // HLerrc
-		return nil, err
+		return err
 	}
-	return m, nil
+	// return m, nil
+	sortedAndStringed(m)
+	return nil
+}
+
+func sortedAndStringed(m map[string][md5.Size]byte) {
+	var paths []string // initialize to right size..
+	for path := range m {
+		paths = append(paths, path)
+	}
+	sort.Strings(paths)
+	for _, path := range paths {
+		fmt.Printf("%x  %s\n", m[path], path)
+	}
 }
