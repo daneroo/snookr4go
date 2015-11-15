@@ -10,6 +10,7 @@ import (
 	"github.com/rwcarlsen/goexif/tiff"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -41,9 +42,9 @@ func main() {
 		}
 
 		// the bounded walker
-		if err := fswalker.MD5All(root); err != nil {
-			fmt.Printf("MD5 error:%v\n", err)
-		}
+		// if err := fswalker.MD5All(root); err != nil {
+		// 	fmt.Printf("MD5 error:%v\n", err)
+		// }
 
 	}
 
@@ -67,18 +68,18 @@ func visit(ima fswalker.ImageInfo) error {
 	if err == nil {
 		ima.Taken = taken
 	} else {
-		fmt.Printf("  Date error: %v\n", err)
+		fmt.Printf("Exif(%s)  Date error: %v\n", name, err)
 		ima.Taken = time.Unix(0, 0)
 	}
 
 	model, err := x.Get(exif.Model) // normally, don't ignore errors!
 	if err == nil && model != nil {
-		ima.Camera = fmt.Sprintf("%v", model)
+		ima.Camera = strings.Trim(fmt.Sprintf("%v", model), "\"")
 	}
 
 	owner, err := x.Get(mknote.OwnerName) // normally, don't ignore errors!
 	if err == nil && owner != nil {
-		ima.Owner = fmt.Sprintf("%v", owner)
+		ima.Owner = strings.Trim(fmt.Sprintf("%v", owner), "\"")
 	}
 
 	asJson, err := json.Marshal(ima)
