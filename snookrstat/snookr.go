@@ -66,10 +66,10 @@ func visit(ima fswalker.ImageInfo) error {
 
 	taken, err := x.DateTime() // normally, don't ignore errors!
 	if err == nil {
-		ima.Taken = taken
+		ima.Taken = fswalker.ZonelessTime(taken)
 	} else {
 		fmt.Printf("Exif(%s)  Date error: %v\n", name, err)
-		ima.Taken = time.Unix(0, 0)
+		ima.Taken = fswalker.ZonelessTime(time.Unix(0, 0))
 	}
 
 	model, err := x.Get(exif.Model) // normally, don't ignore errors!

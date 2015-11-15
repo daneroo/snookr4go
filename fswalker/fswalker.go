@@ -19,14 +19,20 @@ import (
 // for Marshalling without TimeZone
 type ZonelessTime time.Time
 
+func (t ZonelessTime) MarshalJSON() ([]byte, error) {
+	//do your serializing here
+	stamp := fmt.Sprintf("\"%s\"", time.Time(t).Format("2006-01-02T15:04:05"))
+	return []byte(stamp), nil
+}
+
 type ImageInfo struct {
-	FileName     string    `json:"filename"`
-	Size         int64     `json:"size"`
-	Md5          string    `json:"md5"`
-	LastModified time.Time `json:"lastModified"`
-	Taken        time.Time `json:"taken"`
-	Camera       string    `json:"camera"`
-	Owner        string    `json:"owner"`
+	FileName     string       `json:"filename"`
+	Size         int64        `json:"size"`
+	Md5          string       `json:"md5"`
+	LastModified ZonelessTime `json:"lastModified"`
+	Taken        ZonelessTime `json:"taken"`
+	Camera       string       `json:"camera"`
+	Owner        string       `json:"owner"`
 }
 
 type ImageWalkFunc func(ima ImageInfo) error
@@ -54,7 +60,7 @@ func WalkImages(root string, walkImageFn ImageWalkFunc) error {
 			ima := ImageInfo{
 				FileName:     filename,
 				Size:         f.Size(),
-				LastModified: f.ModTime(),
+				LastModified: ZonelessTime(f.ModTime()),
 				Md5:          fmt.Sprintf("%x", md5.Sum(data)),
 			}
 
